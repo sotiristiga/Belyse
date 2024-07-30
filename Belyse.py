@@ -23,6 +23,7 @@ month_levels = pd.Series([
 belyse['Month_Year']=pd.to_datetime(belyse['Month_Year'],format='mixed')
 belyse_complete_orders=belyse.loc[(belyse['order_situation']=="Ολοκληρώθηκε")|((belyse['order_situation']=="Μέρος της έχει επιστραφεί")& (belyse['Return']==0))]
 
+
 kpi1,kpi2,kpi3,kpi4,kpi5 = st.columns(5)
 kpi1.metric(label="Ολοκληρωμένες Παραγγελίες",
         value=belyse_complete_orders['id_order'].nunique())
