@@ -122,4 +122,7 @@ with tab2:
                                 labels={'Month_order':'Ημερομηνία',"Price":'Έσοδα από πωλήσεις'},
                                 markers=True,width=1800)
                 fig_line_comp_orders_yby.update_layout(plot_bgcolor='white',font_size=13)
-                st.write(fig_line_comp_orders_yby)              
+                st.write(fig_line_comp_orders_yby)       
+
+
+
