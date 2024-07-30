@@ -115,8 +115,3 @@ with tab2:
 
 
 
-belyse.columns
-
-
-
-belyse_complete_orders['id_order'].nunique()
