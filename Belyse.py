@@ -14,6 +14,7 @@ belyse= pd.read_csv(f"https://raw.githubusercontent.com/sotiristiga/Belyse/main/
 belyse['entry_date'] = pd.to_datetime(belyse['entry_date'],dayfirst=True)
 belyse['Date_order']=belyse["entry_date"].dt.date
 belyse['Month_order']=belyse["entry_date"].dt.month_name()
+
 belyse['Year_order']=belyse["entry_date"].dt.year
 belyse['Month_Year']=belyse["entry_date"].dt.strftime('%m-%Y')
 month_levels = pd.Series([
@@ -21,13 +22,14 @@ month_levels = pd.Series([
   "July", "August", "September", "October", "November", "December"
 ])
 belyse['Month_Year']=pd.to_datetime(belyse['Month_Year'],format='mixed')
+belyse['Month_order']=pd.Categorical(belyse['Month_order'],categories=month_levels)
 belyse_complete_orders=belyse.loc[(belyse['order_situation']=="Ολοκληρώθηκε")|((belyse['order_situation']=="Μέρος της έχει επιστραφεί")& (belyse['Return']==0))]
 
 kpi1,kpi2,kpi3,kpi4,kpi5 = st.columns(5)
 kpi1.metric(label="Ολοκληρωμένες Παραγγελίες",
         value=belyse_complete_orders['id_order'].nunique())
 kpi2.metric(label="Aκυρωμένες Παραγγελίες",
-        value=belyse[belyse['order_situation']=="Ακυρωμένη"]['order_situation'].nunique())
+        value=belyse[belyse['order_situation']=="Ακυρωμένη"]['id_order'].nunique())
 kpi3.metric(label="Επιστροφή Προϊόντών",
         value=belyse['Return'].sum())
 kpi4.metric(label="Έσοδα απο πωλήσεις",
@@ -77,7 +79,7 @@ tab1,tab2=st.tabs(['Συνολικές παραγγελίες',"Έσοδα"])
 with tab1:
         tab11,tab12=st.tabs(['Ανά ημέρα',"Ανά μήνα"])
         with tab11:
-                fig_line_comp_orders_dbd = px.line(belyse[belyse['order_situation']=="Ολοκληρώθηκε"][['Date_order','id_order']].value_counts().reset_index().groupby('Date_order')['count'].count().reset_index().sort_values('Date_order'), 
+                fig_line_comp_orders_dbd = px.line(belyse_complete_orders[['Date_order','id_order']].value_counts().reset_index().groupby('Date_order')['count'].count().reset_index().sort_values('Date_order'), 
                                         x="Date_order", y="count", 
                                         title='',
                                 labels={'Date_order':'Ημερομηνία',"count":'Ολοκληρωμένες παραγγελίες'},
@@ -85,7 +87,7 @@ with tab1:
                 fig_line_comp_orders_dbd.update_layout(plot_bgcolor='white',font_size=13)
                 st.write(fig_line_comp_orders_dbd)
         with tab12:
-                fig_line_comp_orders_mbm = px.bar(belyse[belyse['order_situation']=="Ολοκληρώθηκε"][['Month_Year','id_order']].value_counts().reset_index().groupby('Month_Year')['count'].count().reset_index().sort_values('Month_Year'), 
+                fig_line_comp_orders_mbm = px.bar(belyse_complete_orders[['Month_Year','id_order']].value_counts().reset_index().groupby('Month_Year')['count'].count().reset_index().sort_values('Month_Year'), 
                                         x="Month_Year", y="count", 
                                         title='',
                                 labels={'Month_Year':'Μήνας-Έτος',"count":'Ολοκληρωμένες παραγγελίες'},
@@ -94,24 +96,30 @@ with tab1:
                 st.write(fig_line_comp_orders_mbm)
 
 with tab2:
-        tab21,tab22=st.tabs(['Ανά ημέρα',"Ανά μήνα"])
+        tab21,tab22,tab23=st.tabs(['Ανά ημέρα',"Ανά μήνα",'Σύγκριση ανά έτος'])
         with tab21:
-                fig_line_comp_orders_dbd = px.line(belyse.loc[(belyse['order_situation']=="Ολοκληρώθηκε")|((belyse['order_situation']=="Μέρος της έχει επιστραφεί")& (belyse['Return']==0))].groupby(['Date_order','id_order'])['Total_payment'].mean().reset_index().groupby('Date_order')['Total_payment'].sum().reset_index().sort_values('Date_order'), 
-                                        x="Date_order", y="Total_payment", 
+                fig_line_comp_orders_dbd = px.line(belyse_complete_orders.groupby(['Date_order','id_order'])['Price'].mean().reset_index().groupby('Date_order')['Price'].sum().reset_index().sort_values('Date_order'), 
+                                        x="Date_order", y="Price", 
                                         title='',
-                                labels={'Date_order':'Ημερομηνία',"Total_payment":'Έσοδα από πωλήσεις'},
+                                labels={'Date_order':'Ημερομηνία',"Price":'Έσοδα από πωλήσεις'},
                                 markers=True,width=1800)
                 fig_line_comp_orders_dbd.update_layout(plot_bgcolor='white',font_size=13)
                 st.write(fig_line_comp_orders_dbd)
         with tab22:
-                fig_line_comp_orders_mbm = px.bar(belyse.loc[(belyse['order_situation']=="Ολοκληρώθηκε")|((belyse['order_situation']=="Μέρος της έχει επιστραφεί")& (belyse['Return']==0))].groupby(['Month_Year','id_order'])['Total_payment'].mean().reset_index().groupby('Month_Year')['Total_payment'].sum().reset_index().sort_values('Month_Year'), 
-                                        x="Month_Year", y="Total_payment", 
+                fig_line_comp_orders_mbm = px.bar(belyse_complete_orders.groupby(['Month_Year','id_order'])['Price'].mean().reset_index().groupby('Month_Year')['Price'].sum().reset_index().sort_values('Month_Year'), 
+                                        x="Month_Year", y="Price", 
                                         title='',
-                                labels={'Month_Year':'Μήνας-Έτος',"Total_payment":'Έσοδα από πωλήσεις'},
-                                text='Total_payment',width=1000)
+                                labels={'Month_Year':'Μήνας-Έτος',"Price":'Έσοδα από πωλήσεις'},
+                                text='Price',width=1000)
                 fig_line_comp_orders_mbm.update_traces(textfont_size=13, texttemplate = '%{text:.3s} €',textangle=0, cliponaxis=False)
                 fig_line_comp_orders_mbm.update_layout(plot_bgcolor='white',font_size=12)
                 st.write(fig_line_comp_orders_mbm)
-
-
-
+        with tab23:
+                 
+                fig_line_comp_orders_yby = px.line(belyse_complete_orders.groupby(['Month_order','Year_order'])['Price'].sum().reset_index().sort_values('Month_order'), 
+                                        x="Month_order", y="Price", 
+                                        title='',color='Year_order',
+                                labels={'Month_order':'Ημερομηνία',"Price":'Έσοδα από πωλήσεις'},
+                                markers=True,width=1800)
+                fig_line_comp_orders_yby.update_layout(plot_bgcolor='white',font_size=13)
+                st.write(fig_line_comp_orders_yby)              
