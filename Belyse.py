@@ -231,7 +231,7 @@ with pie3:
     pie3.update_layout(plot_bgcolor='white',font_size=20,legend=dict(yanchor="top",y=0.65,xanchor="right",x=0.1),title_y=0.6,title_x=0.1)
     st.write(pie3)
 
-belyse_complete_orders[['Availability',"id_order"]].value_counts().reset_index().groupby('Availability')['count'].sum()
 
-belyse_complete_orders[['Supplier']].value_counts().reset_index().groupby('Supplier')['count'].sum().reset_index()
-belyse_complete_orders.groupby('Supplier')['Price'].sum().reset_index()
+
+
+
