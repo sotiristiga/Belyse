@@ -37,8 +37,8 @@ st.set_page_config(layout='wide',page_title="Belyse Lights")
 belyse= pd.read_csv(f"https://raw.githubusercontent.com/sotiristiga/Belyse/main/Belyse.csv")
 belyse['entry_date'] = pd.to_datetime(belyse['entry_date'],dayfirst=True)
 belyse['Date_order']=belyse["entry_date"].dt.date
-belyse['Month_order']=belyse["entry_date"].dt.month_name()
-belyse['Year_order']=belyse["entry_date"].dt.year
+belyse['Month order']=belyse["entry_date"].dt.month_name()
+belyse['Year order']=belyse["entry_date"].dt.year
 belyse['Month_Year']=belyse["entry_date"].dt.strftime('%m-%Y')
 month_levels = pd.Series([
   "January", "February", "March", "April", "May", "June",
@@ -50,17 +50,19 @@ belyse['Availability']=belyse['Availability'].replace("’μεσα διαθέσ�
 belyse['acceptance_date']=belyse['acceptance_date'].replace("0","01/01/1900 00:00")
 belyse['Availability']=pd.Categorical(belyse['Availability'],categories=pd.Series(['Άμεσα διαθέσιμο','Διαθέσιμο από 1 έως 3 ημέρες','Διαθέσιμο από 4 έως 10 ημέρες','Διαθέσιμο από 10 έως 30 ημέρες']))
 belyse['Month_Year']=pd.to_datetime(belyse['Month_Year'],format='mixed')
-belyse['Month_order']=pd.Categorical(belyse['Month_order'],categories=month_levels)
+belyse['Month order']=pd.Categorical(belyse['Month order'],categories=month_levels)
 belyse['Product']=belyse['Product'].replace('� ','')
+belyse["Supplier"]=belyse["Supplier"].fillna('Not entry')
 belyse['MPN']="C-"+ belyse['MPN']
 belyse['Total_Price']=belyse['Price']*belyse['Quantity']
 belyse['acceptance_date'] = pd.to_datetime(belyse['acceptance_date'],dayfirst=True)
 belyse['acceptance_days']=((belyse['acceptance_date'].dt.year-belyse['entry_date'].dt.year)*365 +(belyse['acceptance_date'].dt.month-belyse['entry_date'].dt.month)*30+belyse['acceptance_date'].dt.day-belyse['entry_date'].dt.day).round(0)
 belyse['delivery_date'] = pd.to_datetime(belyse['delivery_date'],dayfirst=True)
 belyse['delivery_days']=((belyse['delivery_date'].dt.year-belyse['entry_date'].dt.year)*365 +(belyse['delivery_date'].dt.month-belyse['entry_date'].dt.month)*30+belyse['delivery_date'].dt.day-belyse['entry_date'].dt.day).round(0)
-belyse['Year_order']=pd.Categorical(belyse['Year_order'],categories=pd.Series([2023,2024]))
-belyse_complete_orders=belyse.loc[(belyse['order_situation']=="Ολοκληρώθηκε")|((belyse['order_situation']=="Μέρος της έχει επιστραφεί")& (belyse['Return']==0))]
+dynamic_filters = DynamicFilters(belyse, filters=['Month order','Year order','Supplier'])
 
+belyse_filter = dynamic_filters.filter_df()
+belyse_complete_orders=belyse_filter.loc[(belyse_filter['order_situation']=="Ολοκληρώθηκε")|((belyse_filter['order_situation']=="Μέρος της έχει επιστραφεί")& (belyse_filter['Return']==0))]
 Quantity_products=pd.merge(belyse_complete_orders[['MPN','Product']].value_counts().reset_index(),belyse_complete_orders.groupby(['MPN','Product'])['Quantity'].sum().reset_index())
 Quantity_products['Total_quantity']=Quantity_products['Quantity']*Quantity_products['count']
 
@@ -68,6 +70,7 @@ Quantity_products['Total_quantity']=Quantity_products['Quantity']*Quantity_produ
 
 st.image(Image.open("belyse.png"),width=400)
 
+dynamic_filters.display_filters(location='columns', num_columns=2, gap='large')
 
 kpi1,kpi2,kpi3,kpi4= st.columns(4)
 with kpi1:
@@ -79,11 +82,11 @@ with kpi1:
                                         belyse_complete_orders['MPN'].nunique()),
                 unsafe_allow_html=True)
 with kpi2:
-    st.markdown(lnk + metrics_customize(233,58,28,"fas fa-ban","Aκυρωμένες Παραγγελίες",belyse[belyse['order_situation']=="Ακυρωμένη"]['id_order'].nunique()), unsafe_allow_html=True)
+    st.markdown(lnk + metrics_customize(233,58,28,"fas fa-ban","Aκυρωμένες Παραγγελίες",belyse_filter[belyse_filter['order_situation']=="Ακυρωμένη"]['id_order'].nunique()), unsafe_allow_html=True)
 with kpi2:
-    st.markdown(lnk + metrics_customize(255,192,0,"fas fa-times","Παραγγελίες που απορρίφθηκαν",belyse[belyse['order_situation']=="Απορρίφθηκε"]['id_order'].nunique()), unsafe_allow_html=True)
+    st.markdown(lnk + metrics_customize(255,192,0,"fas fa-times","Παραγγελίες που απορρίφθηκαν",belyse_filter[belyse_filter['order_situation']=="Απορρίφθηκε"]['id_order'].nunique()), unsafe_allow_html=True)
 with kpi2:
-    st.markdown(lnk + metrics_customize(21,179,235,"fas fa-backward","Επιστροφές Προϊόντών",belyse['Return'].sum()), unsafe_allow_html=True)
+    st.markdown(lnk + metrics_customize(21,179,235,"fas fa-backward","Επιστροφές Προϊόντών",belyse_filter['Return'].sum()), unsafe_allow_html=True)
 
 with kpi3:
     st.markdown(lnk + metrics_customize(20, 102, 120, "fas fa-user", "Προμηθευτές",
@@ -96,7 +99,7 @@ with kpi3:
 with kpi4:
     st.markdown(lnk + metrics_customize(0,204,102,"fas fa-shopping-bag","Αρ. προϊόντων ανά παραγγελία",belyse_complete_orders['id_order'].value_counts().reset_index()['count'].mean().round(1)), unsafe_allow_html=True)
 with kpi4:
-    st.markdown(lnk + metrics_customize(0,204,102,"fas fa-hourglass","Μέσο διάστημα αποδοχής παραγγελίας",belyse_complete_orders.loc[belyse['acceptance_date']!="1900-01-01 00:00:00"]['acceptance_days'].mean().round(1).astype('str')+" ημέρες"), unsafe_allow_html=True)
+    st.markdown(lnk + metrics_customize(0,204,102,"fas fa-hourglass","Μέσο διάστημα αποδοχής παραγγελίας",belyse_complete_orders.loc[belyse_complete_orders['acceptance_date']!="1900-01-01 00:00:00"]['acceptance_days'].mean().round(1).astype('str')+" ημέρες"), unsafe_allow_html=True)
 with kpi4:
     st.markdown(lnk + metrics_customize(0,204,102,"fas fa-truck","Μέσο διάστημα αποστολή παραγγελίας",belyse_complete_orders['delivery_days'].mean().round(1).astype('str')+" ημέρες"), unsafe_allow_html=True)
 
@@ -145,7 +148,7 @@ tab1, tab2 = st.tabs(['Συνολικές παραγγελίες', "Έσοδα"]
 with tab1:
         tab11,tab12,tab13=st.tabs(['Ανά ημέρα',"Ανά μήνα",'Σύγκριση ανά έτος'])
         with tab11:
-                fig_line_comp_orders_dbd = px.line(belyse[belyse['order_situation']=="Ολοκληρώθηκε"][['Date_order','id_order']].value_counts().reset_index().groupby('Date_order')['count'].count().reset_index().sort_values('Date_order'),
+                fig_line_comp_orders_dbd = px.line(belyse_complete_orders[['Date_order','id_order']].value_counts().reset_index().groupby('Date_order')['count'].count().reset_index().sort_values('Date_order'),
                                         x="Date_order", y="count",
                                         title='',
                                 labels={'Date_order':'Ημερομηνία',"count":'Ολοκληρωμένες παραγγελίες'},
@@ -154,7 +157,7 @@ with tab1:
                 fig_line_comp_orders_dbd.update_layout(plot_bgcolor='white',font_size=13)
                 st.write(fig_line_comp_orders_dbd)
         with tab12:
-                fig_line_comp_orders_mbm = px.bar(belyse[belyse['order_situation']=="Ολοκληρώθηκε"][['Month_Year','id_order']].value_counts().reset_index().groupby('Month_Year')['count'].count().reset_index().sort_values('Month_Year'),
+                fig_line_comp_orders_mbm = px.bar(belyse_complete_orders[['Month_Year','id_order']].value_counts().reset_index().groupby('Month_Year')['count'].count().reset_index().sort_values('Month_Year'),
                                         x="Month_Year", y="count",
                                         title='',
                                 labels={'Month_Year':'Μήνας-Έτος',"count":'Ολοκληρωμένες παραγγελίες'},
@@ -164,10 +167,10 @@ with tab1:
                 st.write(fig_line_comp_orders_mbm)
         with tab13:
             fig_line_comp_orders_yby = px.line(
-                belyse_complete_orders[['Month_order', 'Year_order']].value_counts().reset_index().sort_values('Month_order'),
-                x="Month_order", y="count",
-                title='', color='Year_order',
-                labels={'Month_order': 'Ημερομηνία', "count": 'Ολοκληρωμένες παραγγελίες','Year_order':'Έτος'},
+                belyse_complete_orders[['Month order', 'Year order']].value_counts().reset_index().sort_values('Month order'),
+                x="Month order", y="count",
+                title='', color='Year order',
+                labels={'Month order': 'Ημερομηνία', "count": 'Ολοκληρωμένες παραγγελίες','Year order':'Έτος'},
                 markers=True, width=1800)
             fig_line_comp_orders_yby.update_layout(plot_bgcolor='white', font_size=13)
             st.write(fig_line_comp_orders_yby)
@@ -198,11 +201,11 @@ with tab2:
         fig_line_comp_orders_mbm.update_layout(plot_bgcolor='white', font_size=12)
         st.write(fig_line_comp_orders_mbm)
     with tab23:
-        fig_line_comp_orders_yby = px.line(belyse_complete_orders.groupby(['Month_order', 'Year_order'])['Total_Price'].sum().reset_index().sort_values(
-                'Month_order'),
-            x="Month_order", y="Total_Price",
-            title='', color='Year_order',
-            labels={'Month_order': 'Ημερομηνία', "Price": 'Έσοδα από πωλήσεις','Year_order':'Έτος'},
+        fig_line_comp_orders_yby = px.line(belyse_complete_orders.groupby(['Month order', 'Year order'])['Total_Price'].sum().reset_index().sort_values(
+                'Month order'),
+            x="Month order", y="Total_Price",
+            title='', color='Year order',
+            labels={'Month order': 'Ημερομηνία', "Price": 'Έσοδα από πωλήσεις','Year order':'Έτος'},
             markers=True, width=1800)
         fig_line_comp_orders_yby.update_layout(plot_bgcolor='white', font_size=13)
         st.write(fig_line_comp_orders_yby)
@@ -278,10 +281,6 @@ with col3:
                                            cliponaxis=False,marker_color='#146678')
     fig_line_comp_orders_mbm.update_layout(plot_bgcolor='white', font_size=12)
     st.write(fig_line_comp_orders_mbm)
-
-
-
-
 
 
 
