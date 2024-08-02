@@ -54,14 +54,18 @@ belyse['Month_order']=pd.Categorical(belyse['Month_order'],categories=month_leve
 belyse['Product']=belyse['Product'].replace('� ','')
 belyse['MPN']="C-"+ belyse['MPN']
 belyse['Total_Price']=belyse['Price']*belyse['Quantity']
-belyse['Supplier']=pd.Categorical(belyse['Supplier'],categories=pd.Series(['ARKOLIGHT', 'GLOBOSTAR', 'HERONIA LIGHTING', 'SOLOMON GROUP']))
 belyse['acceptance_date'] = pd.to_datetime(belyse['acceptance_date'],dayfirst=True)
 belyse['acceptance_days']=((belyse['acceptance_date'].dt.year-belyse['entry_date'].dt.year)*365 +(belyse['acceptance_date'].dt.month-belyse['entry_date'].dt.month)*30+belyse['acceptance_date'].dt.day-belyse['entry_date'].dt.day).round(0)
 belyse['delivery_date'] = pd.to_datetime(belyse['delivery_date'],dayfirst=True)
 belyse['delivery_days']=((belyse['delivery_date'].dt.year-belyse['entry_date'].dt.year)*365 +(belyse['delivery_date'].dt.month-belyse['entry_date'].dt.month)*30+belyse['delivery_date'].dt.day-belyse['entry_date'].dt.day).round(0)
+belyse['Year_order']=pd.Categorical(belyse['Year_order'],categories=pd.Series([2023,2024]))
 belyse_complete_orders=belyse.loc[(belyse['order_situation']=="Ολοκληρώθηκε")|((belyse['order_situation']=="Μέρος της έχει επιστραφεί")& (belyse['Return']==0))]
+dynamic_filters = DynamicFilters(belyse_complete_orders, filters=['Month_order','Year_order','Supplier'])
+dynamic_filters.display_filters(location='columns', num_columns=2, gap='large')
+belyse_filter = dynamic_filters.filter_df()
 Quantity_products=pd.merge(belyse_complete_orders[['MPN','Product']].value_counts().reset_index(),belyse_complete_orders.groupby(['MPN','Product'])['Quantity'].sum().reset_index())
 Quantity_products['Total_quantity']=Quantity_products['Quantity']*Quantity_products['count']
+
 
 
 st.image(Image.open("belyse.png"),width=400)
@@ -276,8 +280,6 @@ with col3:
                                            cliponaxis=False,marker_color='#146678')
     fig_line_comp_orders_mbm.update_layout(plot_bgcolor='white', font_size=12)
     st.write(fig_line_comp_orders_mbm)
-
-
 
 
 
