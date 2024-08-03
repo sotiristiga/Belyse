@@ -12,6 +12,7 @@ from datetime import date
 from streamlit_dynamic_filters import DynamicFilters
 import urllib.request
 from PIL import Image
+import time
 
 
 def download_image(url, save_as):
@@ -40,11 +41,15 @@ belyse['Date_order']=belyse["entry_date"].dt.date
 belyse['Month order']=belyse["entry_date"].dt.month_name()
 belyse['Year order']=belyse["entry_date"].dt.year
 belyse['Month_Year']=belyse["entry_date"].dt.strftime('%m-%Y')
+belyse["order_hour"]=belyse['entry_date'].dt.hour.astype("str") +":00-" +(belyse['entry_date'].dt.hour+1).astype("str")+":00"
 month_levels = pd.Series([
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ])
-
+belyse["order_hour"]=pd.Categorical(belyse["order_hour"],categories=pd.Series(['0:00-1:00','1:00-2:00','2:00-3:00','3:00-4:00','5:00-6:00',
+ '6:00-7:00','7:00-8:00','8:00-9:00','9:00-10:00','10:00-11:00','11:00-12:00',
+ '12:00-13:00','13:00-14:00','14:00-15:00','15:00-16:00','16:00-17:00','17:00-18:00',
+ '18:00-19:00','19:00-20:00','20:00-21:00','21:00-22:00', '22:00-23:00','23:00-24:00']))
 
 belyse['Availability']=belyse['Availability'].replace("’μεσα διαθέσιμο","Άμεσα διαθέσιμο")
 belyse['acceptance_date']=belyse['acceptance_date'].replace("0","01/01/1900 00:00")
@@ -146,7 +151,7 @@ st.write("#### Ολοκληρωμένες παραγγελίες")
 
 tab1, tab2 = st.tabs(['Συνολικές παραγγελίες', "Έσοδα"])
 with tab1:
-        tab11,tab12,tab13=st.tabs(['Ανά ημέρα',"Ανά μήνα",'Σύγκριση ανά έτος'])
+        tab11,tab12,tab13,tab14=st.tabs(['Ανά ημέρα',"Ανά μήνα",'Σύγκριση ανά έτος','Ανά ώρα'])
         with tab11:
                 fig_line_comp_orders_dbd = px.line(belyse_complete_orders[['Date_order','id_order']].value_counts().reset_index().groupby('Date_order')['count'].count().reset_index().sort_values('Date_order'),
                                         x="Date_order", y="count",
@@ -174,9 +179,17 @@ with tab1:
                 markers=True, width=1800)
             fig_line_comp_orders_yby.update_layout(plot_bgcolor='white', font_size=13)
             st.write(fig_line_comp_orders_yby)
-
+        with tab14:
+                fig_line_comp_orders_hbh = px.bar(belyse_complete_orders[['order_hour','id_order']].value_counts().reset_index().groupby('order_hour')['count'].count().reset_index().sort_values('order_hour'),
+                                        x="order_hour", y="count",
+                                        title='',
+                                labels={'order_hour':'Ώρα παραγγελίας',"count":'Ολοκληρωμένες παραγγελίες'},
+                                text_auto=True,width=2000)
+                fig_line_comp_orders_hbh.update_traces(marker_color='#146678')
+                fig_line_comp_orders_hbh.update_layout(plot_bgcolor='white',font_size=13)
+                st.write(fig_line_comp_orders_hbh)
 with tab2:
-    tab21, tab22, tab23 = st.tabs(['Ανά ημέρα', "Ανά μήνα", 'Σύγκριση ανά έτος'])
+    tab21, tab22, tab23,tab24 = st.tabs(['Ανά ημέρα', "Ανά μήνα", 'Σύγκριση ανά έτος',"Ανά ώρα"])
     with tab21:
         fig_line_comp_orders_dbd = px.line(
             belyse_complete_orders.groupby(['Date_order', 'id_order'])['Total_Price'].mean().reset_index().groupby(
@@ -209,6 +222,18 @@ with tab2:
             markers=True, width=1800)
         fig_line_comp_orders_yby.update_layout(plot_bgcolor='white', font_size=13)
         st.write(fig_line_comp_orders_yby)
+    with tab24:
+        fig_line_comp_orders_hbh = px.bar(
+            belyse_complete_orders.groupby(['order_hour', 'id_order'])['Total_Price'].mean().reset_index().groupby(
+                'order_hour')['Total_Price'].sum().reset_index().sort_values('order_hour'),
+            x="order_hour", y="Total_Price",
+            title='',
+            labels={'order_hour': 'Ώρα παραγγελίας', "Total_Price": 'Έσοδα από πωλήσεις'},
+            text='Total_Price', width=2000)
+        fig_line_comp_orders_hbh.update_traces(textfont_size=13, texttemplate='%{text:.3s} €', textangle=0,
+                                               cliponaxis=False,marker_color='#146678')
+        fig_line_comp_orders_hbh.update_layout(plot_bgcolor='white', font_size=12)
+        st.write(fig_line_comp_orders_hbh)
 
 pie1,pie2,pie3= st.columns(3)
 
@@ -282,8 +307,7 @@ with col3:
     fig_line_comp_orders_mbm.update_layout(plot_bgcolor='white', font_size=12)
     st.write(fig_line_comp_orders_mbm)
 
-
-
+belyse["order_hour"]=belyse['entry_date'].dt.hour.astype("str") +":00-" +(belyse['entry_date'].dt.hour+1).astype("str")+":00"
 
 
 
