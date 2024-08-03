@@ -101,6 +101,8 @@ with kpi3:
     st.markdown(lnk + metrics_customize(0,204,102,"fas fa-euro-sign","Έσοδα απο πωλήσεις",belyse_complete_orders['Total_Price'].sum().round(2)), unsafe_allow_html=True)
 with kpi3:
     st.markdown(lnk + metrics_customize(0,204,102,"fas fa-euro-sign","Προμήθεια Skroutz",belyse_complete_orders.groupby('id_order')['Skroutz_Commission'].mean().reset_index()['Skroutz_Commission'].sum().round(2)), unsafe_allow_html=True)
+with kpi3:
+    st.markdown(lnk + metrics_customize(0,204,102,"fas fa-percent","ποσοστό εσόδων Skroutz",((belyse_complete_orders.groupby('id_order')['Skroutz_Commission'].mean().reset_index()['Skroutz_Commission'].sum()/belyse_complete_orders['Total_Price'].sum()).round(3)*100)), unsafe_allow_html=True)
 with kpi4:
     st.markdown(lnk + metrics_customize(0,204,102,"fas fa-shopping-bag","Αρ. προϊόντων ανά παραγγελία",belyse_complete_orders['id_order'].value_counts().reset_index()['count'].mean().round(1)), unsafe_allow_html=True)
 with kpi4:
@@ -306,5 +308,8 @@ with col3:
                                            cliponaxis=False,marker_color='#146678')
     fig_line_comp_orders_mbm.update_layout(plot_bgcolor='white', font_size=12)
     st.write(fig_line_comp_orders_mbm)
+
+belyse["order_hour"]=belyse['entry_date'].dt.hour.astype("str") +":00-" +(belyse['entry_date'].dt.hour+1).astype("str")+":00"
+
 
 
