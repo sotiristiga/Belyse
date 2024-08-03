@@ -307,7 +307,4 @@ with col3:
     fig_line_comp_orders_mbm.update_layout(plot_bgcolor='white', font_size=12)
     st.write(fig_line_comp_orders_mbm)
 
-belyse["order_hour"]=belyse['entry_date'].dt.hour.astype("str") +":00-" +(belyse['entry_date'].dt.hour+1).astype("str")+":00"
-
-
 
