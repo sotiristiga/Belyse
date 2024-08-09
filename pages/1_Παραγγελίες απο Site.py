@@ -16,8 +16,6 @@ import time
 
 
 
-
-
 def download_image(url, save_as):
     urllib.request.urlretrieve(url, save_as)
 
@@ -44,6 +42,7 @@ belysefo['Acceptance_Date'] = pd.to_datetime(belysefo['Acceptance_Date'])
 
 belysefo['Month']=belysefo['Acceptance_Date'].dt.month_name()
 belysefo['Year']=belysefo['Acceptance_Date'].dt.year
+belysefo['Year'] = belysefo['Year'].astype('str')
 
 belysefo['Month_Year']=belysefo['Acceptance_Date'].dt.strftime('%m-%Y')
 belysefo['Month_Year']=pd.to_datetime(belysefo['Month_Year'],format='mixed')
@@ -85,22 +84,22 @@ tab1,tab2,tab3=st.tabs(['Συνολικές παραγγελίες','Έσοδα 
 
 with tab1:
     fig_line_comp_orders_mbm = px.line(
-        belysefo_filter['Date_order'].value_counts().reset_index(),
+        belysefo_filter['Date_order'].value_counts().reset_index().sort_values('Date_order'),
         x="Date_order", y="count",
         title='',
         labels={'Date_order': 'Ημ. παραγγελίας', "count": 'Ολοκληρωμένες παραγγελίες'},
-        width=300,markers=True)
+        width=700,markers=True)
     fig_line_comp_orders_mbm.update_traces(marker_color='#146678')
     fig_line_comp_orders_mbm.update_layout(plot_bgcolor='white', font_size=13)
     st.write(fig_line_comp_orders_mbm)
 
 with tab2:
     fig_line_comp_orders_mbm = px.line(
-        belysefo_filter.groupby(['Date_order'])['Total Price'].sum().reset_index(),
+        belysefo_filter.groupby(['Date_order'])['Total Price'].sum().reset_index().sort_values('Date_order'),
         x="Date_order", y="Total Price",
         title='',
         labels={'Date_order': 'Ημ. παραγγελίας', "Total Price": 'Έσοδα πωλήσεων'},
-        width=400,markers=True)
+        width=700,markers=True)
     fig_line_comp_orders_mbm.update_traces(marker_color='#146678')
     fig_line_comp_orders_mbm.update_layout(plot_bgcolor='white', font_size=13)
     st.write(fig_line_comp_orders_mbm)
@@ -108,11 +107,11 @@ with tab2:
 
 with tab3:
     fig_line_comp_orders_mbm = px.line(
-        belysefo_filter.groupby(['Date_order'])['Profit'].sum().reset_index(),
+        belysefo_filter.groupby(['Date_order'])['Profit'].sum().reset_index().sort_values('Date_order'),
         x="Date_order", y="Profit",
         title='',
         labels={'Date_order': 'Ημ. παραγγελίας', "Profit": 'Κέρδη πωλήσεων'},
-        width=1000,markers=True)
+        width=700,markers=True)
     fig_line_comp_orders_mbm.update_traces(marker_color='#146678')
     fig_line_comp_orders_mbm.update_layout(plot_bgcolor='white', font_size=13)
     st.write(fig_line_comp_orders_mbm)
@@ -160,7 +159,7 @@ with year:
     tab7, tab8, tab9 = st.tabs(['Συνολικές παραγγελίες', 'Έσοδα πωλήσεων', 'Κέρδη πωλήσεων'])
     with tab7:
         fig_line_comp_orders_mbm = px.bar(
-            belysefo_filter['Year'].value_counts().reset_index(),
+            belysefo_filter['Year'].value_counts().reset_index().sort_values('Year'),
             x="Year", y="count",
             title='',
             labels={'Year': 'Έτος', "count": 'Ολοκληρωμένες παραγγελίες'},
@@ -172,7 +171,7 @@ with year:
 
     with tab8:
         fig_line_comp_orders_mbm = px.bar(
-            belysefo_filter.groupby(['Year'])['Total Price'].sum().reset_index(),
+            belysefo_filter.groupby(['Year'])['Total Price'].sum().reset_index().sort_values('Year'),
             x="Year", y="Total Price",
             title='',
             labels={'Year': 'Έτος', "Total Price": 'Έσοδα πωλήσεων'},
@@ -184,7 +183,7 @@ with year:
 
     with tab9:
         fig_line_comp_orders_mbm = px.bar(
-            belysefo_filter.groupby(['Year'])['Profit'].sum().reset_index().sor,
+            belysefo_filter.groupby(['Year'])['Profit'].sum().reset_index().sort_values('Year'),
             x="Year", y="Profit",
             title='',
             labels={'Year': 'Έτος', "Profit": 'Κέρδη πωλήσεων'},
