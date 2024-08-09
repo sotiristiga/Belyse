@@ -120,6 +120,7 @@ with tab3:
 
 month, year = st.columns(2)
 with month:
+    st.write('##### Παραγωγή ανα μήνα')
     tab4,tab5,tab6=st.tabs(['Συνολικές παραγγελίες','Έσοδα πωλήσεων','Κέρδη πωλήσεων'])
     with tab4:
         fig_line_comp_orders_mbm = px.bar(
