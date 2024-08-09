@@ -42,7 +42,6 @@ belysefo['Acceptance_Date'] = pd.to_datetime(belysefo['Acceptance_Date'])
 
 belysefo['Month']=belysefo['Acceptance_Date'].dt.month_name()
 belysefo['Year']=belysefo['Acceptance_Date'].dt.year
-belysefo['Year'] = belysefo['Year'].astype('str')
 
 belysefo['Month_Year']=belysefo['Acceptance_Date'].dt.strftime('%m-%Y')
 belysefo['Month_Year']=pd.to_datetime(belysefo['Month_Year'],format='mixed')
